@@ -30,9 +30,9 @@ f = opener.open(req)
 data = f.read()
 #Меню с директории в приставката
 def CATEGORIES():
-        addDir('Търсене на видео',baseurl+'/show/search/',2,searchicon)
-        addDir('Филми',baseurl + '/ajax/show/movies/all/from/1900/to/2099/rating/0/votes/0/language/all/latest/page/1',1,'DefaultFolder.png')
-        addDir('Сериали',baseurl + '/ajax/show/tvshows/all/from/1900/to/2099/rating/0/votes/0/language/all/latest/page/1',1,'DefaultFolder.png')
+        addDir('Търсене на видео',baseurl+'/show/search/',2,'',searchicon)
+        addDir('Филми',baseurl + '/ajax/show/movies/all/from/1900/to/2099/rating/0/votes/0/language/all/latest/page/1',1,'','DefaultFolder.png')
+        addDir('Сериали',baseurl + '/ajax/show/tvshows/all/from/1900/to/2099/rating/0/votes/0/language/all/latest/page/1',4,'','DefaultFolder.png')
 
 
 #Разлистване видеата на първата подадена страница
@@ -43,7 +43,6 @@ def INDEXPAGES(url):
         f = opener.open(req)
         data = f.read()
         f.close()
-        print 'tovaurle' + url
         #Начало на обхождането
         br = 0 #Брояч на видеата в страницата - 24 за този сайт
         match = re.compile('alt="(.+?)" src="(.+?)".+?normal">(.+?)<.+?data-href="(.+?)"').findall(data)
@@ -62,7 +61,7 @@ def INDEXPAGES(url):
                url = newurl + '/page/' + str(newpage)
                print 'URL OF THE NEXT PAGE IS-' + url
                thumbnail='DefaultFolder.png'
-               addDir('следваща страница>>',url,1,thumbnail)
+               addDir('следваща страница>>',url,1,'',thumbnail)
 
 
 #Търсачка
@@ -80,7 +79,7 @@ def SEARCH(url):
 
 
         else:
-             addDir('Върнете се назад в главното меню за да продължите','','',"DefaultFolderBack.png")
+             addDir('Върнете се назад в главното меню за да продължите','','','',"DefaultFolderBack.png")
 
 def rot47(s):
     x = []
@@ -185,6 +184,155 @@ def PLAY(url):
             except:
               xbmc.executebuiltin("Notification('Грешка','Видеото липсва на сървъра!')")
 
+def INDEXSERIES(url):
+        req = urllib2.Request(url)
+        req.add_header('User-Agent', UA)
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        f = opener.open(req)
+        data = f.read()
+        f.close()
+        #Начало на обхождането
+        br = 0 #Брояч на видеата в страницата - 24 за този сайт
+        match = re.compile('alt="(.+?)" src="(.+?)".+?normal">(.+?)<.+?data-href="(.+?)"').findall(data)
+        for zaglavie,kartinka,godina,link in match:
+            thumbnail = 'https:' + kartinka 
+            desc = 'ГОДИНА: ' + godina
+            vid = baseurl + link
+            addDir(zaglavie,vid,5,desc,thumbnail)
+            br = br + 1
+            print 'Items counter: ' + str(br)
+        if br == 24: #тогава имаме следваща страница и конструираме нейния адрес
+            getpage=re.compile('(.+?)/page/(.*)').findall(url)
+            for newurl,page in getpage:
+               newpage = int(page)+1
+               url = newurl + '/page/' + str(newpage)
+               print 'URL OF THE NEXT PAGE IS-' + url
+               thumbnail='DefaultFolder.png'
+               addDir('следваща страница>>',url,4,'',thumbnail)
+
+def SHOWSERIES(url):
+        req = urllib2.Request(url)
+        req.add_header('User-Agent', UA)
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        f = opener.open(req)
+        data = f.read()
+        f.close()
+        #Начало на обхождането
+        br=0
+        match = re.compile('data-typ="e" data-pid="(.+?)" data-pes="(.+?)" data-pep="(\d+)" data-epid="(\d+)".+?class="epTitle">(.+?)</div>.+?image" content="(.+?)"').findall(data)
+        for first,second,third,fourth,epzaglavie,kartinka in match:
+         matchn = re.compile('data-txt="(.+?)" /><div class="d-flex"').findall(data)
+         for name in matchn:
+          if third < 10:
+           name = name + ' ' + second + 'x0' + str(third)
+          if third >=10:
+           name = name + ' ' + second + 'x' + str(third)
+           vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + str(third)
+           thumbnail = kartinka
+           desc = 'Заглавие на епизод: ' + epzaglavie
+           addLink(name,vid+'@'+url,6,desc,thumbnail)
+           br = br + 1
+        if br == 0:
+          match = re.compile('data-typ="e" data-pid="(.+?)" data-pes="(.+?)" data-pep="(\d+)" data-epid="(\d+)".+?class="epTitle">(.+?)</div>').findall(data)
+          for first,second,third,fourth,epzaglavie in match:
+           matchn = re.compile('data-txt="(.+?)" /><div class="d-flex"').findall(data)
+          for name in matchn:
+          #thumbnail = 'https:' + kartinka
+           third = int(third)
+           if third < 10:
+            name = name + ' ' + second + 'x0' + str(third)
+           if third >=10:
+            name = name + ' ' + second + 'x' + str(third)
+           vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + str(third)
+           desc = 'Заглавие на епизод: ' + epzaglavie
+           thumbnail = 'DefaultVideo.png'
+           addLink(name,vid+'@'+url,6,desc,thumbnail)
+
+def PLAYSERIES(url):
+        matchu = re.compile('(.*)@(.*)').findall(url)
+        for url2,url1 in matchu:
+         try:
+          req = urllib2.Request(url1)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          req = urllib2.Request(url2)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          #print data
+          html = base64.b64decode(data.encode("rot13"))
+          links = (rot47(html))
+          jsonrsp = json.loads(links)
+          path0 = jsonrsp['file']
+          #print path0
+          path = path0.replace('master.m3u8', '720p')
+          #print path
+          req = urllib2.Request(path)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          match = re.compile('(https://.+?/.+?/)p').findall(path)
+          for link in match:
+           matchl = re.compile('(https://.+?)/(.*)').findall(link)
+           for first, second in matchl:
+           #print data
+            data2 = data.replace('/'+second, link).replace('.bin', '.ts')
+            file = open(__addondir__+'play.m3u', 'w')
+            file.write(data2)
+            file.close()
+            finalurl = (__addondir__+'play.m3u8')
+            li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
+            li.setInfo('video', { 'title': name })
+            try:
+              xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
+            except:
+              xbmc.executebuiltin("Notification('Грешка','Видеото липсва на сървъра!')")
+         except:
+          req = urllib2.Request(url1)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          req = urllib2.Request(url2)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          #print data
+          html = base64.b64decode(data.encode("rot13"))
+          links = (rot47(html))
+          jsonrsp = json.loads(links)
+          path0 = jsonrsp['file']
+          #print path0
+          path = path0.replace('master.m3u8', '360p')
+          #print path
+          req = urllib2.Request(path)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          match = re.compile('(https://.+?/.+?/)p').findall(path)
+          for link in match:
+           matchl = re.compile('(https://.+?)/(.*)').findall(link)
+           for first, second in matchl:
+           #print data
+            data2 = data.replace('/'+second, link).replace('.bin', '.ts')
+            file = open(__addondir__+'play.m3u', 'w')
+            file.write(data2)
+            file.close()
+            finalurl = (__addondir__+'play.m3u8')
+            li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
+            li.setInfo('video', { 'title': name })
+            try:
+              xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
+            except:
+              xbmc.executebuiltin("Notification('Грешка','Видеото липсва на сървъра!')")
+
+
 #Модул за добавяне на отделно заглавие и неговите атрибути към съдържанието на показваната в Kodi директория - НЯМА НУЖДА ДА ПРОМЕНЯТЕ НИЩО ТУК
 def addLink(name,url,mode,plot,iconimage):
         u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
@@ -197,12 +345,12 @@ def addLink(name,url,mode,plot,iconimage):
         return ok
 
 #Модул за добавяне на отделна директория и нейните атрибути към съдържанието на показваната в Kodi директория - НЯМА НУЖДА ДА ПРОМЕНЯТЕ НИЩО ТУК
-def addDir(name,url,mode,iconimage):
+def addDir(name,url,mode,plot,iconimage):
         u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
         ok=True
         liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
         liz.setArt({'thumb': iconimage, 'poster': iconimage, 'banner': iconimage, 'fanart': iconimage})
-        liz.setInfo( type="Video", infoLabels={ "Title": name } )
+        liz.setInfo( type="Video", infoLabels={ "Title": name, "plot": plot } )
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
         return ok
 
@@ -278,5 +426,17 @@ elif mode==2:
 elif mode==3:
         print ""+url
         PLAY(url)
+
+elif mode==4:
+        print ""+url
+        INDEXSERIES(url)
+        
+elif mode==5:
+        print ""+url
+        SHOWSERIES(url)
+        
+elif mode==6:
+        print ""+url
+        PLAYSERIES(url)
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

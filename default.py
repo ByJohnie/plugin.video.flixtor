@@ -43,7 +43,7 @@ def INDEXPAGES(url):
         f = opener.open(req)
         data = f.read()
         f.close()
-
+        print 'tovaurle' + url
         #Начало на обхождането
         br = 0 #Брояч на видеата в страницата - 24 за този сайт
         match = re.compile('alt="(.+?)" src="(.+?)".+?normal">(.+?)<.+?data-href="(.+?)"').findall(data)
@@ -51,12 +51,12 @@ def INDEXPAGES(url):
             thumbnail = 'https:' + kartinka 
             desc = 'ГОДИНА: ' + godina
             #url = baseurl + '/ajax/gvid/m/' + link
-            url = baseurl + link
-            addLink(zaglavie,url,3,desc,thumbnail)
+            vid = baseurl + link
+            addLink(zaglavie,vid,3,desc,thumbnail)
             br = br + 1
-            #print 'Items counter: ' + str(br)
+            print 'Items counter: ' + str(br)
         if br == 24: #тогава имаме следваща страница и конструираме нейния адрес
-            getpage=re.compile('(.+?)/page/(.+?)').findall(url)
+            getpage=re.compile('(.+?)/page/(.*)').findall(url)
             for newurl,page in getpage:
                newpage = int(page)+1
                url = newurl + '/page/' + str(newpage)
@@ -72,10 +72,10 @@ def SEARCH(url):
         searchText = ''
         if (keyb.isConfirmed()):
             searchText = urllib.quote_plus(keyb.getText())
-            searchText=searchText.replace(' ','+')
-            searchurl = url + searchText
-            searchurl = searchurl.encode('utf-8')
-            #print 'SEARCHING:' + searchurl
+            searchText=searchText.replace(' ','%20')
+            searchurl = baseurl + '/ajax/show/search/' + searchText + '/from/1900/to/2099/rating/0/votes/0/language/all/relevance/page/1'
+            #searchurl = searchurl.encode('utf-8')
+            print 'SEARCHING:' + searchurl
             INDEXPAGES(searchurl)
 
 
@@ -94,55 +94,96 @@ def rot47(s):
 
 #Зареждане на видео
 def PLAY(url):
-        req = urllib2.Request(url)
-        req.add_header('User-Agent', UA)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        f = opener.open(req)
-        data = f.read()
-        match1 = re.compile('.+?/watch/.+?/(.+?)/').findall(url)
-        for link in match1:
-         #print link
-         try:       
+        try:
+         req = urllib2.Request(url)
+         req.add_header('User-Agent', UA)
+         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+         f = opener.open(req)
+         data = f.read()
+         match1 = re.compile('.+?/watch/.+?/(.+?)/').findall(url)
+         for link in match1:
+          #print link       
           zlink = baseurl + '/ajax/gvid/m/' + link
-         #print zlink
-         except:
-          zlink = baseurl + '/ajax/gvid/e/' + link
-         req = urllib2.Request(zlink)
-         req.add_header('User-Agent', UA)
-         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-         f = opener.open(req)
-         data = f.read()
-         #print data
-         html = base64.b64decode(data.encode("rot13"))
-         links = (rot47(html))
-         jsonrsp = json.loads(links)
-         path0 = jsonrsp['file']
-         #print path0
-         path = path0.replace('master.m3u8', '720p')
-         #print path
-         req = urllib2.Request(path)
-         req.add_header('User-Agent', UA)
-         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-         f = opener.open(req)
-         data = f.read()
-         match = re.compile('(https://.+?/.+?/)p').findall(path)
-         for link in match:
-          matchl = re.compile('(https://.+?)/(.*)').findall(link)
-          for first, second in matchl:
+          #print zlink
+          req = urllib2.Request(zlink)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
           #print data
-           data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-           file = open(__addondir__+'play.m3u', 'w')
-           file.write(data2)
-           file.close()
-           finalurl = (__addondir__+'play.m3u8')
-           li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
-           li.setInfo('video', { 'title': name })
-           try:
-             xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
-           except:
-             xbmc.executebuiltin("Notification('Грешка','Видеото липсва на сървъра!')")
-
-        
+          html = base64.b64decode(data.encode("rot13"))
+          links = (rot47(html))
+          jsonrsp = json.loads(links)
+          path0 = jsonrsp['file']
+          #print path0
+          path = path0.replace('master.m3u8', '720p')
+          #print path
+          req = urllib2.Request(path)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          match = re.compile('(https://.+?/.+?/)p').findall(path)
+          for link in match:
+           matchl = re.compile('(https://.+?)/(.*)').findall(link)
+           for first, second in matchl:
+           #print data
+            data2 = data.replace('/'+second, link).replace('.bin', '.ts')
+            file = open(__addondir__+'play.m3u', 'w')
+            file.write(data2)
+            file.close()
+            finalurl = (__addondir__+'play.m3u8')
+            li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
+            li.setInfo('video', { 'title': name })
+            try:
+              xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
+            except:
+              xbmc.executebuiltin("Notification('Грешка','Видеото липсва на сървъра!')")
+        except:
+         req = urllib2.Request(url)
+         req.add_header('User-Agent', UA)
+         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+         f = opener.open(req)
+         data = f.read()
+         match1 = re.compile('.+?/watch/.+?/(.+?)/').findall(url)
+         for link in match1:
+          #print link       
+          zlink = baseurl + '/ajax/gvid/m/' + link
+          #print zlink
+          req = urllib2.Request(zlink)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          #print data
+          html = base64.b64decode(data.encode("rot13"))
+          links = (rot47(html))
+          jsonrsp = json.loads(links)
+          path0 = jsonrsp['file']
+          #print path0
+          path = path0.replace('master.m3u8', '360p')
+          #print path
+          req = urllib2.Request(path)
+          req.add_header('User-Agent', UA)
+          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+          f = opener.open(req)
+          data = f.read()
+          match = re.compile('(https://.+?/.+?/)p').findall(path)
+          for link in match:
+           matchl = re.compile('(https://.+?)/(.*)').findall(link)
+           for first, second in matchl:
+           #print data
+            data2 = data.replace('/'+second, link).replace('.bin', '.ts')
+            file = open(__addondir__+'play.m3u', 'w')
+            file.write(data2)
+            file.close()
+            finalurl = (__addondir__+'play.m3u8')
+            li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
+            li.setInfo('video', { 'title': name })
+            try:
+              xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, li)
+            except:
+              xbmc.executebuiltin("Notification('Грешка','Видеото липсва на сървъра!')")
 
 #Модул за добавяне на отделно заглавие и неговите атрибути към съдържанието на показваната в Kodi директория - НЯМА НУЖДА ДА ПРОМЕНЯТЕ НИЩО ТУК
 def addLink(name,url,mode,plot,iconimage):

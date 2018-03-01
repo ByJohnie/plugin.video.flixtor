@@ -128,10 +128,10 @@ def PLAY(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(__addondir__+'play.m3u', 'w')
+            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = (__addondir__+'play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:
@@ -173,10 +173,10 @@ def PLAY(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(__addondir__+'play.m3u', 'w')
+            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = (__addondir__+'play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:
@@ -281,10 +281,10 @@ def PLAYSERIES(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(__addondir__+'play.m3u', 'w')
+            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = (__addondir__+'play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:
@@ -321,10 +321,10 @@ def PLAYSERIES(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(__addondir__+'play.m3u', 'w')
+            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = (__addondir__+'play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:

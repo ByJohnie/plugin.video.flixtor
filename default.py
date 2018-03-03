@@ -8,8 +8,10 @@ import urllib2
 import xbmc, xbmcplugin,xbmcgui,xbmcaddon
 import base64
 import json
-#import xbmcvfs
+import xbmcvfs
 import cookielib
+#from random import randint
+
 
 #Място за дефиниране на константи, които ще се използват няколкократно из отделните модули
 __addon_id__= 'plugin.video.flixtor'
@@ -91,8 +93,17 @@ def rot47(s):
             x.append(s[i])
     return ''.join(x)
 
+def remove_dir (path):
+       dirList, flsList = xbmcvfs.listdir(path)
+       for fl in flsList: 
+            xbmcvfs.delete(os.path.join(path, fl))
+       for dr in dirList: 
+            remove_dir(os.path.join(path, dr))
+       xbmcvfs.rmdir(path)
 #Зареждане на видео
 def PLAY(url):
+        remove_dir(xbmc.translatePath('special://temp/flix'))
+        xbmcvfs.mkdir(xbmc.translatePath('special://temp/flix'))
         try:
          req = urllib2.Request(url)
          req.add_header('User-Agent', UA)
@@ -117,6 +128,26 @@ def PLAY(url):
           #print path0
           path = path0.replace('master.m3u8', '720p')
           #print path
+          try:
+             for index in range(0, len(jsonrsp['tracks'])):
+              subs = baseurl + jsonrsp['tracks'][index]['file']
+              match = re.compile('.*(\.\w+).vtt').findall(subs)
+              for langname in match:
+               print langname
+               print jsonrsp['tracks'][index]['file']
+               print subs
+               req = urllib2.Request(subs)
+               req.add_header('User-Agent', UA)
+               opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+               f = opener.open(req)
+               datasubs = f.read()
+               f.close()
+               newnames = 'play' + langname
+               file = open(xbmc.translatePath('special://temp/flix/'+newnames+'.srt'), 'w')
+               file.write(datasubs)
+               file.close()
+          except:
+                  pass
           req = urllib2.Request(path)
           req.add_header('User-Agent', UA)
           opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -128,10 +159,10 @@ def PLAY(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
+            file = open(xbmc.translatePath('special://temp/flix/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = xbmc.translatePath('special://temp/play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/flix/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:
@@ -162,6 +193,26 @@ def PLAY(url):
           #print path0
           path = path0.replace('master.m3u8', '360p')
           #print path
+          try:
+             for index in range(0, len(jsonrsp['tracks'])):
+              subs = baseurl + jsonrsp['tracks'][index]['file']
+              match = re.compile('.*(\.\w+).vtt').findall(subs)
+              for langname in match:
+               print langname
+               print jsonrsp['tracks'][index]['file']
+               print subs
+               req = urllib2.Request(subs)
+               req.add_header('User-Agent', UA)
+               opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+               f = opener.open(req)
+               datasubs = f.read()
+               f.close()
+               newnames = 'play' + langname
+               file = open(xbmc.translatePath('special://temp/flix/'+newnames+'.srt'), 'w')
+               file.write(datasubs)
+               file.close()
+          except:
+                  pass
           req = urllib2.Request(path)
           req.add_header('User-Agent', UA)
           opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -173,10 +224,10 @@ def PLAY(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
+            file = open(xbmc.translatePath('special://temp/flix/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = xbmc.translatePath('special://temp/play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/flix/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:
@@ -219,36 +270,36 @@ def SHOWSERIES(url):
         f.close()
         #Начало на обхождането
         br=0
-        match = re.compile('data-typ="e" data-pid="(.+?)" data-pes="(.+?)" data-pep="(\d+)" data-epid="(\d+)".+?class="epTitle">(.+?)</div>.+?image" content="(.+?)"').findall(data)
-        for first,second,third,fourth,epzaglavie,kartinka in match:
+        match = re.compile('data-typ="e" data-pid="(\d+)" data-pes="(\d+)" data-pep="(\d+)" data-epid="(\d+)".+?class="epTitle">(.+?)</div>').findall(data)
+        for first,second,third,fourth,epzaglavie in match:
          matchn = re.compile('data-txt="(.+?)" /><div class="d-flex"').findall(data)
          for name in matchn:
-          if third < 10:
-           name = name + ' ' + second + 'x0' + str(third)
-          if third >=10:
-           name = name + ' ' + second + 'x' + str(third)
-           vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + str(third)
-           thumbnail = kartinka
+           try:
+            matchi = re.compile('image" content="(.+?)"').findall(data)
+            for kartinka in matchi:
+             thumbnail = kartinka
+           except:
+            pass
+           name = name + ' ' + second + 'x' + third.replace('1','01').replace('2','02').replace('3','03').replace('4','04').replace('5','05').replace('6','06').replace('7','07').replace('8','08').replace('9','09').replace('010','10').replace('011','11').replace('012','12').replace('013','13')
+           vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + third
+           #thumbnail = kartinka
            desc = 'Заглавие на епизод: ' + epzaglavie
            addLink(name,vid+'@'+url,6,desc,thumbnail)
            br = br + 1
         if br == 0:
-          match = re.compile('data-typ="e" data-pid="(.+?)" data-pes="(.+?)" data-pep="(\d+)" data-epid="(\d+)".+?class="epTitle">(.+?)</div>').findall(data)
+          match = re.compile('data-typ="e" data-pid="(\d+)" data-pes="(\d+)" data-pep="(\d+)" data-epid="(\d+)".+?class="epTitle">(.+?)</div>').findall(data)
           for first,second,third,fourth,epzaglavie in match:
            matchn = re.compile('data-txt="(.+?)" /><div class="d-flex"').findall(data)
           for name in matchn:
-          #thumbnail = 'https:' + kartinka
-           third = int(third)
-           if third < 10:
-            name = name + ' ' + second + 'x0' + str(third)
-           if third >=10:
-            name = name + ' ' + second + 'x' + str(third)
-           vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + str(third)
-           desc = 'Заглавие на епизод: ' + epzaglavie
-           thumbnail = 'DefaultVideo.png'
-           addLink(name,vid+'@'+url,6,desc,thumbnail)
+            name = name + ' ' + second + 'x' + third.replace('1','01').replace('2','02').replace('3','03').replace('4','04').replace('5','05').replace('6','06').replace('7','07').replace('8','08').replace('9','09').replace('010','10').replace('011','11').replace('012','12').replace('013','13')
+            vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + str(third)
+            desc = 'Заглавие на епизод: ' + epzaglavie
+            thumbnail = 'DefaultVideo.png'
+            addLink(name,vid+'@'+url,6,desc,thumbnail)
 
 def PLAYSERIES(url):
+        remove_dir(xbmc.translatePath('special://temp/flix'))
+        xbmcvfs.mkdir(xbmc.translatePath('special://temp/flix'))
         matchu = re.compile('(.*)@(.*)').findall(url)
         for url2,url1 in matchu:
          try:
@@ -270,6 +321,24 @@ def PLAYSERIES(url):
           #print path0
           path = path0.replace('master.m3u8', '720p')
           #print path
+          try:
+             for index in range(0, len(jsonrsp['tracks'])):
+              subs = baseurl + jsonrsp['tracks'][index]['file']
+              match = re.compile('.*(\.\w+).vtt').findall(subs)
+              for langname in match:
+               print jsonrsp['tracks'][index]['file']
+               req = urllib2.Request(subs)
+               req.add_header('User-Agent', UA)
+               opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+               f = opener.open(req)
+               datasubs = f.read()
+               f.close()
+               newnames = 'play' + langname
+               file = open(xbmc.translatePath('special://temp/flix/'+newnames+'.srt'), 'w')
+               file.write(datasubs)
+               file.close()
+          except:
+                  pass
           req = urllib2.Request(path)
           req.add_header('User-Agent', UA)
           opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -281,10 +350,10 @@ def PLAYSERIES(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
+            file = open(xbmc.translatePath('special://temp/flix/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = xbmc.translatePath('special://temp/play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/flix/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:
@@ -310,6 +379,26 @@ def PLAYSERIES(url):
           #print path0
           path = path0.replace('master.m3u8', '360p')
           #print path
+          try:
+             for index in range(0, len(jsonrsp['tracks'])):
+              subs = baseurl + jsonrsp['tracks'][index]['file']
+              match = re.compile('.*(\.\w+).vtt').findall(subs)
+              for langname in match:
+               print langname
+               print jsonrsp['tracks'][index]['file']
+               print subs
+               req = urllib2.Request(subs)
+               req.add_header('User-Agent', UA)
+               opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+               f = opener.open(req)
+               datasubs = f.read()
+               f.close()
+               newnames = 'play' + langname
+               file = open(xbmc.translatePath('special://temp/flix/'+newnames+'.srt'), 'w')
+               file.write(datasubs)
+               file.close()
+          except:
+                  pass
           req = urllib2.Request(path)
           req.add_header('User-Agent', UA)
           opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -321,10 +410,10 @@ def PLAYSERIES(url):
            for first, second in matchl:
            #print data
             data2 = data.replace('/'+second, link).replace('.bin', '.ts')
-            file = open(xbmc.translatePath('special://temp/play.m3u8'), 'w')
+            file = open(xbmc.translatePath('special://temp/flix/play.m3u8'), 'w')
             file.write(data2)
             file.close()
-            finalurl = xbmc.translatePath('special://temp/play.m3u8')
+            finalurl = xbmc.translatePath('special://temp/flix/play.m3u8')
             li = xbmcgui.ListItem(iconImage=iconimage, thumbnailImage=iconimage, path=finalurl)
             li.setInfo('video', { 'title': name })
             try:

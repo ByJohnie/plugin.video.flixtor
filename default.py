@@ -280,7 +280,8 @@ def SHOWSERIES(url):
              thumbnail = kartinka
            except:
             pass
-           name = name + ' ' + second + 'x' + third.replace('1','01').replace('2','02').replace('3','03').replace('4','04').replace('5','05').replace('6','06').replace('7','07').replace('8','08').replace('9','09').replace('010','10').replace('011','11').replace('012','12').replace('013','13')
+           third = third.replace('1','01').replace('2','02').replace('3','03').replace('4','04').replace('5','05').replace('6','06').replace('7','07').replace('8','08').replace('9','09').replace('010','10').replace('101','11').replace('102','12').replace('103','13').replace('104','14').replace('105','15').replace('106','16').replace('107','17').replace('108','18').replace('109','19').replace('020','20').replace('201','21').replace('202','22').replace('203','23').replace('204','24').replace('205','25').replace('206','26').replace('207','27').replace('208','28').replace('209','29').replace('030','30').replace('301','31').replace('302','32').replace('303','33').replace('304','34').replace('305','35').replace('306','36')
+           name = name + ' ' + second + 'x' + third
            vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + third
            #thumbnail = kartinka
            desc = 'Заглавие на епизод: ' + epzaglavie
@@ -291,8 +292,9 @@ def SHOWSERIES(url):
           for first,second,third,fourth,epzaglavie in match:
            matchn = re.compile('data-txt="(.+?)" /><div class="d-flex"').findall(data)
           for name in matchn:
-            name = name + ' ' + second + 'x' + third.replace('1','01').replace('2','02').replace('3','03').replace('4','04').replace('5','05').replace('6','06').replace('7','07').replace('8','08').replace('9','09').replace('010','10').replace('011','11').replace('012','12').replace('013','13')
-            vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + str(third)
+            third = third.replace('1','01').replace('2','02').replace('3','03').replace('4','04').replace('5','05').replace('6','06').replace('7','07').replace('8','08').replace('9','09').replace('010','10').replace('101','11').replace('102','12').replace('103','13').replace('104','14').replace('105','15').replace('106','16').replace('107','17').replace('108','18').replace('109','19').replace('020','20').replace('201','21').replace('202','22').replace('203','23').replace('204','24').replace('205','25').replace('206','26').replace('207','27').replace('208','28').replace('209','29').replace('030','30').replace('301','31').replace('302','32').replace('303','33').replace('304','34').replace('305','35').replace('306','36')
+            name = name + ' ' + second + 'x' + third
+            vid = baseurl + '/ajax/gvid/e/' + first + '/' + second + '/' + third
             desc = 'Заглавие на епизод: ' + epzaglavie
             thumbnail = 'DefaultVideo.png'
             addLink(name,vid+'@'+url,6,desc,thumbnail)
